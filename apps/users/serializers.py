@@ -2,6 +2,7 @@ from dj_rest_auth.registration.serializers import RegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.models import Permission
 from django.conf import settings
 
 from google.oauth2 import id_token as google_id_token
@@ -89,3 +90,40 @@ class GoogleIDTokenSerializer(serializers.Serializer):
             "google_sub": sub,
         })
         return attrs
+
+class UserSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [ "id", "email", "first_name", "last_name", "roles", "permissions"]
+        
+    def get_roles(self, obj):
+        """
+            Return an array of groups (roles) that belongs to a user
+        """
+        return [g.name for g in obj.groups.all()]
+    
+    def get_permissions(self, obj):
+        """
+            Returns all permission codename assigned directly or via roles
+        """
+        user_perms = Permission.objects.filter(user=obj).order_by().values_list("codename", flat=True)
+        group_perms = Permission.objects.filter(group__user=obj).order_by().values_list("codename", flat=True)
+        combined = user_perms.union(group_perms)
+        return list(combined)
+    
+class AdminUserSerializer(serializers.ModelSerializer):
+    roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [ "id", "email", "first_name", "last_name", "is_active", "roles", "permissions" ]
+        
+    def get_roles(self, obj):
+        return list(obj.groups.values_list("name", flat=True))
+
+    def get_permissions(self, obj):
+        return sorted(list(obj.get_all_permissions()))

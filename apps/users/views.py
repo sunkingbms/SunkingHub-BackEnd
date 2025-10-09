@@ -2,10 +2,13 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
+from rest_framework import status, permissions, viewsets
+from rest_framework.permissions import IsAuthenticated
 
-from .serializers import GoogleIDTokenSerializer
+
+from .serializers import GoogleIDTokenSerializer, AdminUserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from apps.roles.permissions import HasRole
 
 # Storing Google link with allauth
 try:
@@ -81,3 +84,20 @@ class GoogleVerifyView(APIView):
                 "last_name": user.last_name,
             },
         }, status=status.HTTP_200_OK)
+        
+class AdminUserViewSet(viewsets.ModelViewSet):
+    """
+        Full CRUD for users by Admins or Managers
+    """
+    queryset = User.objects.all().order_by("-id")
+    serializer_class = AdminUserSerializer
+    permission_classes = [ IsAuthenticated, HasRole(["Admin"])]
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+            Users soft delete
+        """
+        user = self.get_object()
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        return Response({"detail": f"User {user.email} deactivated."}, status=status.HTTP_200_OK)

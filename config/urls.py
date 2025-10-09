@@ -28,5 +28,11 @@ urlpatterns = [
     path("api/auth/google/", include("allauth.socialaccount.urls")),
     
     # Google token verification endpoint
-    path("api/auth/google/verify", GoogleVerifyView.as_view(), name="google-verify")
+    path("api/auth/google/verify", GoogleVerifyView.as_view(), name="google-verify"),
+    
+    # Roles endpoints url:
+    path("api/", include("apps.roles.urls")),
+    
+    # Users CRUD urls endpoints
+    path("api/", include("apps.users.urls")),
 ]

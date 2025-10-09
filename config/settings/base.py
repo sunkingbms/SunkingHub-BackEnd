@@ -11,6 +11,7 @@ ALLOWED_HOSTS = ["*"]  # adjust for your deployment
 INSTALLED_APPS = [
     # Local apps
     "apps.users",
+    "apps.roles",
 
     # Django core
     "django.contrib.admin",
@@ -103,7 +104,8 @@ REST_AUTH_REGISTER_SERIALIZERS = {
 }
 
 REST_AUTH_SERIALIZERS = {
-    "LOGIN_SERIALIZER":"apps.users.serializers.CustomLoginSerializer"
+    "LOGIN_SERIALIZER":"apps.users.serializers.CustomLoginSerializer",
+    "USER_DETAILS_SERIALIZER": "apps.users.serializers.UserSerializer",
 }
 
 SIMPLE_JWT = {
