@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv( )
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -12,6 +15,9 @@ INSTALLED_APPS = [
     # Local apps
     "apps.users",
     "apps.roles",
+    "apps.paga_payments",
+    "apps.request",
+    "apps.projects",
 
     # Django core
     "django.contrib.admin",
@@ -34,6 +40,10 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",  
     "dj_rest_auth",                  
     "dj_rest_auth.registration", 
+    
+    # Docs
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
@@ -67,7 +77,17 @@ TEMPLATES = [{
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
-    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
+        "OPTIONS": {
+            "sslmode": "disable"  
+        },
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = []
@@ -81,7 +101,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom user
-AUTH_USER_MODEL = "users.User"   # adjust if your app config label is different
+AUTH_USER_MODEL = "users.User"  
 
 # Authentication backends
 AUTHENTICATION_BACKENDS = [
@@ -97,6 +117,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 REST_AUTH_REGISTER_SERIALIZERS = {
@@ -109,7 +130,7 @@ REST_AUTH_SERIALIZERS = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=120),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -145,3 +166,11 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SunkingHub API",
+    "DESCRIPTION": "Comprehensive API documentation for Auth & RBAC.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}
+

@@ -4,9 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions, viewsets
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import Group
 
 
-from .serializers import GoogleIDTokenSerializer, AdminUserSerializer
+from .serializers import GoogleIDTokenSerializer, AdminUserSerializer, UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.roles.permissions import HasRole
 
@@ -43,8 +44,13 @@ class GoogleVerifyView(APIView):
             email=email,
             defaults={"first_name": first_name, "last_name": last_name, "is_active": True},
         )
+        
+        # 2) Assign a default role to the user ** We can use signals to automate it. But later **
+        if created:
+            default_role, _ = Group.objects.get_or_create(name='User')
+            user.groups.add(default_role)
 
-        # Optional: update names if blank
+        # 3) Optional: update names if blank
         if not created:
             changed = False
             if first_name and not user.first_name:
@@ -55,9 +61,13 @@ class GoogleVerifyView(APIView):
                 changed = True
             if changed:
                 user.save(update_fields=["first_name", "last_name"])
-
+        
+        # 4) Checking if the user has been deactivated
         if not user.is_active:
             return Response({"detail": "Account is inactive."}, status=status.HTTP_403_FORBIDDEN)
+        
+        # 5) Serializing User with roles and permissions
+        user_data = UserSerializer(user, context={"request": request}).data
 
         # 2) (Optional) record Google link in allauth's SocialAccount
         #     This is nice for audits and to prevent duplicate links.
@@ -77,12 +87,7 @@ class GoogleVerifyView(APIView):
         return Response({
             "access": str(access),
             "refresh": str(refresh),
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-            },
+            "user": user_data,
         }, status=status.HTTP_200_OK)
         
 class AdminUserViewSet(viewsets.ModelViewSet):
