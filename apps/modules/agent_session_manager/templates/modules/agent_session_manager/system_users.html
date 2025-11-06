@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>System Users</title>
+</head>
+<body>
+  <h1>Agent Session Manager — System Users</h1>
+  <p>Current page in session: {{ request.session.current_page }}</p>
+
+   <form id="addUserForm">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="text" name="employee_id" placeholder="Employee ID" required>
+    <input type="text" name="first_name" placeholder="First Name" required>
+    <input type="text" name="last_name" placeholder="Last Name" required>
+    <input type="text" name="country" placeholder="Country" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Add User</button>
+  </form>
+
+  <br><br>
+  <table id="grid" class="display"></table>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css">
+
+  <script>
+  $(document).ready(function() {
+    $('#grid').DataTable({
+      ajax: '/modules/agent_session_manager/get_users/',
+      columns: [
+        { data: 'username', title: 'Username' },
+        { data: 'email', title: 'Email' },
+        { data: 'status', title: 'Status' },
+        { data: 'employee_id', title: 'Employee ID' },
+        { data: 'first_name', title: 'First Name' },
+        { data: 'last_name', title: 'Last Name' },
+        { data: 'country', title: 'Country' },
+      ],
+      serverSide: true,
+      processing: true
+    });
+
+    $('#addUserForm').on('submit', function(e) {
+      e.preventDefault();
+      $.ajax({
+        url: '/modules/agent_session_manager/add_user/',
+        method: 'POST',
+        data: $(this).serialize(),
+        success: function() {
+          $('#grid').DataTable().ajax.reload();
+        }
+      });
+    });
+  });
+  </script>
+
+ 
+</body>
+</html>

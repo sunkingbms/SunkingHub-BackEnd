@@ -35,4 +35,7 @@ urlpatterns = [
     
     # Users CRUD urls endpoints
     path("api/", include("apps.users.urls")),
+
+    # Agent Session Manager module urls
+    path("modules/agent_session_manager/", include("apps.modules.agent_session_manager.urls")),
 ]

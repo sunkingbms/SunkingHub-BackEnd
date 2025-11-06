@@ -12,6 +12,7 @@ INSTALLED_APPS = [
     # Local apps
     "apps.users",
     "apps.roles",
+    "apps.modules.agent_session_manager", 
 
     # Django core
     "django.contrib.admin",
@@ -52,7 +53,7 @@ SITE_ID = 1
 
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
-    "DIRS": [],
+    "DIRS": [BASE_DIR / "apps" / "modules" / "agent_session_manager" / "templates"],
     "APP_DIRS": True,
     "OPTIONS": {
         "context_processors": [
